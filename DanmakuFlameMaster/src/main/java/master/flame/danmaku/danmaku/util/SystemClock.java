@@ -11,7 +11,7 @@ public class SystemClock {
     /**
      * 使用系统时间类计算流逝时间
      */
-    public static boolean useSystemClock = false;
+    public static boolean useSystemClock = true;
 
     /**
      * 时间偏移
@@ -36,13 +36,13 @@ public class SystemClock {
 
 
     public static long uptimeMillis() {
-        if (useSystemClock) {
-            return android.os.SystemClock.elapsedRealtime();
-        }
         return calcVideoBaseTime();
     }
 
     private static long baseUptimeMillis() {
+        if (useSystemClock) {
+            return android.os.SystemClock.elapsedRealtime();
+        }
         return System.currentTimeMillis();
     }
 
