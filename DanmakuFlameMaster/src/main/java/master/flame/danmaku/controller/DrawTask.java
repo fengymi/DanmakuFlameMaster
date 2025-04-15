@@ -165,8 +165,8 @@ public class DrawTask implements IDrawTask {
             return;
         synchronized (danmakuList) {
             if (!isClearDanmakusOnScreen) {
-                long beginMills = mTimer.currMillisecond - mContext.mDanmakuFactory.MAX_DANMAKU_DURATION - 100;
-                long endMills = mTimer.currMillisecond + mContext.mDanmakuFactory.MAX_DANMAKU_DURATION;
+                long beginMills = mTimer.getCurrMillisecond() - mContext.mDanmakuFactory.MAX_DANMAKU_DURATION - 100;
+                long endMills = mTimer.getCurrMillisecond() + mContext.mDanmakuFactory.MAX_DANMAKU_DURATION;
                 IDanmakus tempDanmakus = danmakuList.subnew(beginMills, endMills);
                 if (tempDanmakus != null)
                     danmakus = tempDanmakus;
@@ -362,10 +362,10 @@ public class DrawTask implements IDrawTask {
             mRequestRender = false;
             RenderingState renderingState = mRenderingState;
             // prepare screenDanmakus
-            long beginMills = timer.currMillisecond - mContext.mDanmakuFactory.MAX_DANMAKU_DURATION - 100;
-            long endMills = timer.currMillisecond + mContext.mDanmakuFactory.MAX_DANMAKU_DURATION;
+            long beginMills = timer.getCurrMillisecond() - mContext.mDanmakuFactory.MAX_DANMAKU_DURATION - 100;
+            long endMills = timer.getCurrMillisecond() + mContext.mDanmakuFactory.MAX_DANMAKU_DURATION;
             IDanmakus screenDanmakus = danmakus;
-            if(mLastBeginMills > beginMills || timer.currMillisecond > mLastEndMills) {
+            if(mLastBeginMills > beginMills || timer.getCurrMillisecond() > mLastEndMills) {
                 screenDanmakus = danmakuList.sub(beginMills, endMills);
                 if (screenDanmakus != null) {
                     danmakus = screenDanmakus;

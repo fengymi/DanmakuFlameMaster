@@ -27,7 +27,15 @@ public class DanmakuTimer {
     /**
      * 当前弹幕系统的内部时间（毫秒）
      */
-    public long currMillisecond;
+    private long currMillisecond;
+
+    /**
+     * 获取当前时间
+     * @return 当前时间
+     */
+    public long getCurrMillisecond() {
+        return currMillisecond;
+    }
 
     /**
      * 上次更新的时间间隔

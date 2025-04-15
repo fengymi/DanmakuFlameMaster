@@ -43,7 +43,7 @@ public class R2LDanmaku extends BaseDanmaku {
     @Override
     public void layout(IDisplayer displayer, float x, float y) {
         if (mTimer != null) {
-            long currMS = mTimer.currMillisecond;
+            long currMS = mTimer.getCurrMillisecond();
             long deltaDuration = currMS - getActualTime();
             if (deltaDuration > 0 && deltaDuration < duration.value) {
                 this.x = getAccurateLeft(displayer, currMS);

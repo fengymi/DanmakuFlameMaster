@@ -139,7 +139,7 @@ public class SpecialDanmaku extends BaseDanmaku {
 
     @Override
     public void layout(IDisplayer displayer, float x, float y) {
-        getRectAtTime(displayer, mTimer.currMillisecond);
+        getRectAtTime(displayer, mTimer.getCurrMillisecond());
     }
 
     @Override

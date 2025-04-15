@@ -187,7 +187,7 @@ public class DanmakuFilters {
                 return false;
             }
 
-            long elapsedTime = SystemClock.uptimeMillis() - timer.currMillisecond;
+            long elapsedTime = SystemClock.uptimeMillis() - timer.getCurrMillisecond();
             if (elapsedTime >= mMaxTime) {
                 return true;
             }

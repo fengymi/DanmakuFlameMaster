@@ -275,7 +275,7 @@ public abstract class BaseDanmaku {
     }
 
     public boolean isTimeOut() {
-        return mTimer == null || isTimeOut(mTimer.currMillisecond);
+        return mTimer == null || isTimeOut(mTimer.getCurrMillisecond());
     }
 
     public boolean isTimeOut(long ctime) {
@@ -283,7 +283,7 @@ public abstract class BaseDanmaku {
     }
 
     public boolean isOutside() {
-        return mTimer == null || isOutside(mTimer.currMillisecond);
+        return mTimer == null || isOutside(mTimer.getCurrMillisecond());
     }
 
     public boolean isOutside(long ctime) {
@@ -292,7 +292,7 @@ public abstract class BaseDanmaku {
     }
 
     public boolean isLate() {
-        return mTimer == null || mTimer.currMillisecond < getActualTime();
+        return mTimer == null || mTimer.getCurrMillisecond() < getActualTime();
     }
 
     public boolean hasPassedFilter() {
