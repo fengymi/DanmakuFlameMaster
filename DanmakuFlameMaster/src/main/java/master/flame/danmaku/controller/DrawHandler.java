@@ -38,6 +38,7 @@ import master.flame.danmaku.danmaku.model.IDisplayer;
 import master.flame.danmaku.danmaku.model.android.DanmakuContext;
 import master.flame.danmaku.danmaku.parser.BaseDanmakuParser;
 import master.flame.danmaku.danmaku.renderer.IRenderer.RenderingState;
+import master.flame.danmaku.danmaku.util.DanmuSystemTimer;
 import master.flame.danmaku.danmaku.util.SystemClock;
 import master.flame.danmaku.gl.AndroidGLDisplayer;
 import master.flame.danmaku.gl.GLDrawTask;
@@ -69,9 +70,9 @@ public class DrawHandler extends Handler {
 
     public static final int PREPARE = 5;
 
-    private static final int QUIT = 6;
+    public static final int QUIT = 6;
 
-    private static final int PAUSE = 7;
+    public static final int PAUSE = 7;
 
     private static final int SHOW_DANMAKUS = 8;
 
@@ -218,7 +219,7 @@ public class DrawHandler extends Handler {
 //        Log.d("handleMessage", "what=" + what + ", obj=" + msg.obj + ", method=" + (Objects.nonNull(mContext) ? mContext.updateMethod : null));
         switch (what) {
             case PREPARE:
-                SystemClock.reset();
+                DanmuSystemTimer.changeStatus(what, 0);
                 mTimeBase = SystemClock.uptimeMillis();
                 if (mParser == null || !mDanmakuView.isViewReady()) {
                     sendEmptyMessageDelayed(PREPARE, 100);
@@ -289,6 +290,8 @@ public class DrawHandler extends Handler {
                     }
                     mTimeBase -= deltaMs;
                     timer.update(position);
+                    DanmuSystemTimer.changeStatus(what, position);
+
                     mContext.mGlobalFlagValues.updateMeasureFlag();
                     if (drawTask != null)
                         drawTask.seek(position);
@@ -325,7 +328,8 @@ public class DrawHandler extends Handler {
                     if (drawTask != null) {
                         drawTask.onPlayStateChanged(IDrawTask.PLAY_STATE_PLAYING);
                     }
-                    SystemClock.setPlaying(true);
+                    long time = what == SEEK_POS ? (Long) msg.obj : 0L;
+                    DanmuSystemTimer.changeStatus(what, time);
                 } else {
                     sendEmptyMessageDelayed(RESUME, 100);
                 }
@@ -370,7 +374,7 @@ public class DrawHandler extends Handler {
                 if (drawTask != null) {
                     drawTask.onPlayStateChanged(IDrawTask.PLAY_STATE_PAUSE);
                 }
-                SystemClock.setPlaying(false);
+                DanmuSystemTimer.changeStatus(what, 0);
             case QUIT:
                 if (what == QUIT) {
                     removeCallbacksAndMessages(null);
@@ -419,7 +423,8 @@ public class DrawHandler extends Handler {
                 }
                 break;
             case CHANGE_VIDEO_SPEED:
-                SystemClock.setVideoSpeed((float) msg.obj);
+                float videoSpeed = (float) msg.obj;
+                DanmuSystemTimer.changeSpeed(videoSpeed);
                 break;
             case SET_OFFSET_TIME:
                 long newOffsetTime = (int) msg.obj * 1000L;

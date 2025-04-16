@@ -20,6 +20,10 @@ import android.util.SparseArray;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import master.flame.danmaku.danmaku.renderer.IRenderer;
+import master.flame.danmaku.danmaku.util.DanmuSystemTimer;
+import master.flame.danmaku.danmaku.util.SystemClock;
+
 public abstract class BaseDanmaku {
 
     public final static String DANMAKU_BR_CHAR = "/n";
@@ -242,8 +246,49 @@ public abstract class BaseDanmaku {
         this.duration = duration;
     }
 
+    /**
+     * 时间容器
+     */
+    private final long[] timeResult = new long[2];
+    private boolean drawn = false;
+    protected long firstShowTime;
+    protected long showTime;
+
+    /**
+     * 获取当前时间和时间间隔
+     * @return 时间
+     */
+    protected long[] getTimeResult() {
+        long currMS = mTimer.getCurrMillisecond();
+        long deltaDuration = currMS - getActualTime();
+
+        // 已经在显示中
+        if (isDrawn()) {
+            long currentTime = DanmuSystemTimer.getDanmuRealTime();
+            deltaDuration = currentTime - firstShowTime;
+
+            showTime += deltaDuration;
+            currMS = getActualTime() + deltaDuration;
+        }
+
+        timeResult[0] = currMS;
+        timeResult[1] = deltaDuration;
+        return timeResult;
+    }
+
     public int draw(IDisplayer displayer) {
+        if (!drawn) {
+            drawn = true;
+            firstShowTime = DanmuSystemTimer.getDanmuRealTime();
+            time = firstShowTime;
+            return IRenderer.NOTHING_RENDERING;
+        }
+
         return displayer.draw(this);
+    }
+
+    protected boolean isDrawn() {
+        return drawn;
     }
 
     public boolean isMeasured() {
@@ -275,7 +320,7 @@ public abstract class BaseDanmaku {
     }
 
     public boolean isTimeOut() {
-        return mTimer == null || isTimeOut(mTimer.getCurrMillisecond());
+        return mTimer == null || isTimeOut(getTimeResult()[0]);
     }
 
     public boolean isTimeOut(long ctime) {
@@ -283,7 +328,7 @@ public abstract class BaseDanmaku {
     }
 
     public boolean isOutside() {
-        return mTimer == null || isOutside(mTimer.getCurrMillisecond());
+        return mTimer == null || isOutside(getTimeResult()[0]);
     }
 
     public boolean isOutside(long ctime) {
@@ -292,7 +337,7 @@ public abstract class BaseDanmaku {
     }
 
     public boolean isLate() {
-        return mTimer == null || mTimer.getCurrMillisecond() < getActualTime();
+        return mTimer == null || getTimeResult()[0] < getActualTime();
     }
 
     public boolean hasPassedFilter() {
@@ -341,6 +386,13 @@ public abstract class BaseDanmaku {
 
     public DanmakuTimer getTimer() {
         return mTimer;
+    }
+
+    public long getDanmuCurrentTime() {
+        if (isShown()) {
+            return getTimeResult()[0];
+        }
+        return getTimer().getCurrMillisecond();
     }
 
     public void setTimer(DanmakuTimer timer) {

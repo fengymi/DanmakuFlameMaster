@@ -26,8 +26,9 @@ public class L2RDanmaku extends R2LDanmaku {
     @Override
     public void layout(IDisplayer displayer, float x, float y) {
         if (mTimer != null) {
-            long currMS = mTimer.getCurrMillisecond();
-            long deltaDuration = currMS - getActualTime();
+            long[] timeResult = getTimeResult();
+            long currMS = timeResult[0];
+            long deltaDuration = timeResult[1];
             if (deltaDuration > 0 && deltaDuration < duration.value) {
                 this.x = getAccurateLeft(displayer, currMS);
                 if (!this.isShown()) {

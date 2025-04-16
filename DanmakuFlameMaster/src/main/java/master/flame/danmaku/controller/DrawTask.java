@@ -18,6 +18,8 @@ package master.flame.danmaku.controller;
 
 import android.graphics.Canvas;
 
+import java.util.Objects;
+
 import master.flame.danmaku.danmaku.model.AbsDisplayer;
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
 import master.flame.danmaku.danmaku.model.DanmakuTimer;
@@ -164,12 +166,14 @@ public class DrawTask implements IDrawTask {
         if (danmakuList == null || danmakuList.isEmpty())
             return;
         synchronized (danmakuList) {
-            if (!isClearDanmakusOnScreen) {
-                long beginMills = mTimer.getCurrMillisecond() - mContext.mDanmakuFactory.MAX_DANMAKU_DURATION - 100;
-                long endMills = mTimer.getCurrMillisecond() + mContext.mDanmakuFactory.MAX_DANMAKU_DURATION;
-                IDanmakus tempDanmakus = danmakuList.subnew(beginMills, endMills);
-                if (tempDanmakus != null)
-                    danmakus = tempDanmakus;
+            // 清除屏幕弹幕
+            if (isClearDanmakusOnScreen) {
+                danmakus.clear();
+//                long beginMills = mTimer.getCurrMillisecond() - mContext.mDanmakuFactory.MAX_DANMAKU_DURATION - 100;
+//                long endMills = mTimer.getCurrMillisecond() + mContext.mDanmakuFactory.MAX_DANMAKU_DURATION;
+//                IDanmakus tempDanmakus = danmakuList.subnew(beginMills, endMills);
+//                if (tempDanmakus != null)
+//                    danmakus = tempDanmakus;
             }
             danmakuList.clear();
         }
@@ -364,19 +368,25 @@ public class DrawTask implements IDrawTask {
             // prepare screenDanmakus
             long beginMills = timer.getCurrMillisecond() - mContext.mDanmakuFactory.MAX_DANMAKU_DURATION - 100;
             long endMills = timer.getCurrMillisecond() + mContext.mDanmakuFactory.MAX_DANMAKU_DURATION;
-            IDanmakus screenDanmakus = danmakus;
+            // 只捞取当前最后一个弹幕之后的时间
+            BaseDanmaku last = danmakus.last();
+            if (Objects.nonNull(last)) {
+                beginMills = Math.max(beginMills, last.getActualTime() + 1);
+            }
+
             if(mLastBeginMills > beginMills || timer.getCurrMillisecond() > mLastEndMills) {
-                screenDanmakus = danmakuList.sub(beginMills, endMills);
-                if (screenDanmakus != null) {
-                    danmakus = screenDanmakus;
+                IDanmakus newNeedAddItems = danmakuList.sub(beginMills, endMills);
+                if (newNeedAddItems != null) {
+                    danmakus.addAllItem(newNeedAddItems.getCollection());
                 }
-                mLastBeginMills = beginMills;
-                mLastEndMills = endMills;
+                mLastBeginMills = danmakus.first().getActualTime();
+                mLastEndMills = danmakus.last().getActualTime();
             } else {
                 beginMills = mLastBeginMills;
                 endMills = mLastEndMills;
             }
 
+            IDanmakus screenDanmakus = danmakus;
             // prepare runningDanmakus to draw (in sync-mode)
             IDanmakus runningDanmakus = mRunningDanmakus;
             beginTracing(renderingState, runningDanmakus, screenDanmakus);

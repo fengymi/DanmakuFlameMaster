@@ -73,6 +73,8 @@ public interface IDanmakus {
 
     boolean addItem(BaseDanmaku item);
 
+    boolean addAllItem(Collection<BaseDanmaku> items);
+
     boolean removeItem(BaseDanmaku item);
     
     IDanmakus subnew(long startTime, long endTime);

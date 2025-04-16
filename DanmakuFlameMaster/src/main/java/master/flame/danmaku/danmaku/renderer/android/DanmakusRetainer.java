@@ -160,7 +160,7 @@ public class DanmakusRetainer {
 
                 // 检查碰撞
                 willHit = DanmakuUtils.willHitInDuration(disp, item, drawItem,
-                        drawItem.getDuration(), drawItem.getTimer().getCurrMillisecond());
+                        drawItem.getDuration(), drawItem.getDanmuCurrentTime());
                 if (!willHit) {
                     insertItem = item;
                     return ACTION_BREAK;
@@ -346,7 +346,7 @@ public class DanmakusRetainer {
 
                 // 检查碰撞
                 willHit = DanmakuUtils.willHitInDuration(disp, item, drawItem,
-                        drawItem.getDuration(), drawItem.getTimer().getCurrMillisecond());
+                        drawItem.getDuration(), drawItem.getDanmuCurrentTime());
                 if (!willHit) {
                     removeItem = item;
                     // topPos = item.getBottom() - drawItem.paintHeight;

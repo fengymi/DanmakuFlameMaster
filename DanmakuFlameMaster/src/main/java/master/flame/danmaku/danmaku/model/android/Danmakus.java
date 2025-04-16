@@ -127,6 +127,23 @@ public class Danmakus implements IDanmakus {
     }
 
     @Override
+    public boolean addAllItem(Collection<BaseDanmaku> items) {
+        synchronized (this.mLockObject) {
+            if (items != null) {
+                try {
+                    if (this.items.addAll(items)) {
+                        mSize.set(this.items.size());
+                        return true;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
     public boolean removeItem(BaseDanmaku item) {
         if (item == null) {
             return false;
