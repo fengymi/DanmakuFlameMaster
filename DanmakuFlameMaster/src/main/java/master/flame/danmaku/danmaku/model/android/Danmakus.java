@@ -217,12 +217,12 @@ public class Danmakus implements IDanmakus {
             endItem = createItem("end");
         }
 
-        if (subItems != null) {
-            long dtime = startTime - startItem.getActualTime();
-            if (dtime >= 0 && endTime <= endItem.getActualTime()) {
-                return subItems;
-            }
-        }
+//        if (subItems != null) {
+//            long dtime = startTime - startItem.getActualTime();
+//            if (dtime >= 0 && endTime <= endItem.getActualTime()) {
+//                return subItems;
+//            }
+//        }
 
         startItem.setTime(startTime);
         endItem.setTime(endTime);

@@ -37,6 +37,7 @@ public class DanmakuUtils {
      */
     public static boolean willHitInDuration(IDisplayer disp, BaseDanmaku d1, BaseDanmaku d2,
             long duration, long currTime) {
+//        Log.d("DanmakuUtils", "冲突判定 对比 d1=" + d1.toString() + ", d2=" + d2.toString());
         final int type1 = d1.getType();
         final int type2 = d2.getType();
         // allow hit if different type
@@ -57,19 +58,32 @@ public class DanmakuUtils {
             return true;
         }
 
-        return checkHitAtTime(disp, d1, d2, currTime)
-                || checkHitAtTime(disp, d1, d2,  d1.getActualTime() + d1.getDuration());
+        // d1已经开始显示，计算剩余显示时间
+        if (d1.isDrawn()) {
+            duration = duration - (currTime - d1.getFirstShowTime());
+        }
+//        boolean currentHit = checkHitAtTime(disp, d1, d2, 0, currTime);
+//        boolean afterHit = checkHitAtTime(disp, d1, d2, duration, currTime);
+//
+////        Log.d("DanmakuUtils", "冲突判定 当前=" + currentHit + ", afterHit=" + afterHit + ", text1=" + d1.text + ", text2=" + d2.text);
+        return checkHitAtTime(disp, d1, d2, 0, currTime) || checkHitAtTime(disp, d1, d2, duration, currTime);
     }
 
-    private static boolean checkHitAtTime(IDisplayer disp, BaseDanmaku d1, BaseDanmaku d2, long time) {
+    private static boolean checkHitAtTime(IDisplayer disp, BaseDanmaku d1, BaseDanmaku d2, long durationTime, long tempBaseTime) {
         if (d1.getType() != d2.getType()) {
             return false;
         }
-        final float[] rectArr1 = d1.getRectAtTime(disp, time);
-        final float[] rectArr2 = d2.getRectAtTime(disp, time);
+
+        // 使用当前时间为d1的时间， d2 为当前时间再减去 d2-d1的时间
+        long realTime = DanmuSystemTimer.getDanmuRealTime() + durationTime;
+        final float[] rectArr1 = d1.getRectAtTime(disp, realTime, d1.isDrawn() ? d1.getFirstShowTime() : tempBaseTime);
+        final float[] rectArr2 = d2.getRectAtTime(disp, realTime, d2.isDrawn() ? d2.getFirstShowTime() : tempBaseTime);
         if (rectArr1 == null || rectArr2 == null)
             return false;
-        return checkHit(d1.getType(), d2.getType(), rectArr1, rectArr2);
+
+        boolean checkHit = checkHit(d1.getType(), d2.getType(), rectArr1, rectArr2);
+//        Log.d("DanmakuUtils", "冲突判定1 结果=" + checkHit + ", 时间=" + durationTime + ", left1=" + rectArr1[0] + ", right1=" + rectArr1[2] + ", left2=" + rectArr2[0] + ", step1=" + ((R2LDanmaku) d1).mStepX + ", step2=" + ((R2LDanmaku) d2).mStepX + ", text1=" + d1.text + ", text2=" + d2.text);
+        return checkHit;
     }
     
     private static boolean checkHit(int type1, int type2, float[] rectArr1,

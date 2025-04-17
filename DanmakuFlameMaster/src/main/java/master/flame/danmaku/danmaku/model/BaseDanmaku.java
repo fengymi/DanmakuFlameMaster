@@ -18,6 +18,7 @@ package master.flame.danmaku.danmaku.model;
 
 import android.util.SparseArray;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import master.flame.danmaku.danmaku.renderer.IRenderer;
@@ -25,6 +26,10 @@ import master.flame.danmaku.danmaku.util.DanmuSystemTimer;
 import master.flame.danmaku.danmaku.util.SystemClock;
 
 public abstract class BaseDanmaku {
+    @Override
+    public String toString() {
+        return "text:" + text + ", time:" + time + ", duration=" + (Objects.isNull(duration) ? null : duration.value);
+    }
 
     public final static String DANMAKU_BR_CHAR = "/n";
 
@@ -280,15 +285,18 @@ public abstract class BaseDanmaku {
         if (!drawn) {
             drawn = true;
             firstShowTime = DanmuSystemTimer.getDanmuRealTime();
-            time = firstShowTime;
             return IRenderer.NOTHING_RENDERING;
         }
 
         return displayer.draw(this);
     }
 
-    protected boolean isDrawn() {
+    public boolean isDrawn() {
         return drawn;
+    }
+
+    public long getFirstShowTime() {
+        return firstShowTime;
     }
 
     public boolean isMeasured() {
@@ -366,7 +374,11 @@ public abstract class BaseDanmaku {
 
     public abstract void layout(IDisplayer displayer, float x, float y);
 
-    public abstract float[] getRectAtTime(IDisplayer displayer, long currTime);
+    public float[] getRectAtTime(IDisplayer displayer, long currTime) {
+        return getRectAtTime(displayer, currTime, 0);
+    }
+
+    public abstract float[] getRectAtTime(IDisplayer displayer, long currTime, long tempBaseTime);
 
     public abstract float getLeft();
 

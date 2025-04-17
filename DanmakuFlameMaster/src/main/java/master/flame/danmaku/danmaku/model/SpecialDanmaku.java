@@ -143,7 +143,7 @@ public class SpecialDanmaku extends BaseDanmaku {
     }
 
     @Override
-    public float[] getRectAtTime(IDisplayer displayer, long currTime) {
+    public float[] getRectAtTime(IDisplayer displayer, long currTime, long tempBaseTime) {
 
         if (!isMeasured())
             return null;

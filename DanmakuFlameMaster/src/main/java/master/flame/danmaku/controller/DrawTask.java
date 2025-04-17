@@ -379,8 +379,13 @@ public class DrawTask implements IDrawTask {
                 if (newNeedAddItems != null) {
                     danmakus.addAllItem(newNeedAddItems.getCollection());
                 }
-                mLastBeginMills = danmakus.first().getActualTime();
-                mLastEndMills = danmakus.last().getActualTime();
+
+                BaseDanmaku first = danmakus.first();
+                last = danmakus.last();
+                if (Objects.nonNull(first) && Objects.nonNull(last)) {
+                    mLastBeginMills = first.getActualTime();
+                    mLastEndMills = last.getActualTime();
+                }
             } else {
                 beginMills = mLastBeginMills;
                 endMills = mLastEndMills;

@@ -61,8 +61,13 @@ public class R2LDanmaku extends BaseDanmaku {
         this.setVisibility(false);
     }
 
-    protected float getAccurateLeft(IDisplayer displayer, long currTime) {
-        long elapsedTime = currTime - getActualTime();
+    protected float getAccurateLeft(IDisplayer displayer, long currTime, long tempBaseTime) {
+        long actualBaseTime = getActualTime();
+        if (tempBaseTime > 0) {
+            actualBaseTime = tempBaseTime;
+        }
+
+        long elapsedTime = currTime - actualBaseTime;
         if (elapsedTime >= duration.value) {
             return -paintWidth;
         }
@@ -70,11 +75,15 @@ public class R2LDanmaku extends BaseDanmaku {
         return displayer.getWidth() - elapsedTime * mStepX;
     }
 
+    protected float getAccurateLeft(IDisplayer displayer, long currTime) {
+        return getAccurateLeft(displayer, currTime, 0);
+    }
+
     @Override
-    public float[] getRectAtTime(IDisplayer displayer, long time) {
+    public float[] getRectAtTime(IDisplayer displayer, long time, long tempBaseTime) {
         if (!isMeasured())
             return null;
-        float left = getAccurateLeft(displayer, time);
+        float left = getAccurateLeft(displayer, time, tempBaseTime);
         if (RECT == null) {
             RECT = new float[4];
         }

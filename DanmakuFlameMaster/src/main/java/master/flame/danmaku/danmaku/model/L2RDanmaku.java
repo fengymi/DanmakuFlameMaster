@@ -44,10 +44,10 @@ public class L2RDanmaku extends R2LDanmaku {
     }
     
     @Override
-    public float[] getRectAtTime(IDisplayer displayer, long time) {
+    public float[] getRectAtTime(IDisplayer displayer, long time, long tempBaseTime) {
         if (!isMeasured())
             return null;
-        float left = getAccurateLeft(displayer, time);
+        float left = getAccurateLeft(displayer, time, tempBaseTime);
         if (RECT == null) {
             RECT = new float[4];
         }
@@ -58,8 +58,13 @@ public class L2RDanmaku extends R2LDanmaku {
         return RECT;
     }
 
-    protected float getAccurateLeft(IDisplayer displayer, long currTime) {
-        long elapsedTime = currTime - getActualTime();
+    protected float getAccurateLeft(IDisplayer displayer, long currTime, long tempBaseTime) {
+        long actualBaseTime = getActualTime();
+        if (tempBaseTime > 0) {
+            actualBaseTime = tempBaseTime;
+        }
+
+        long elapsedTime = currTime - actualBaseTime;
         if (elapsedTime >= duration.value) {
             return displayer.getWidth();
         }

@@ -21,6 +21,7 @@ import master.flame.danmaku.danmaku.model.IDanmakus;
 import master.flame.danmaku.danmaku.model.IDisplayer;
 import master.flame.danmaku.danmaku.model.android.Danmakus;
 import master.flame.danmaku.danmaku.util.DanmakuUtils;
+import master.flame.danmaku.danmaku.util.DanmuSystemTimer;
 
 public class DanmakusRetainer {
 
@@ -160,7 +161,7 @@ public class DanmakusRetainer {
 
                 // 检查碰撞
                 willHit = DanmakuUtils.willHitInDuration(disp, item, drawItem,
-                        drawItem.getDuration(), drawItem.getDanmuCurrentTime());
+                        drawItem.getDuration(), DanmuSystemTimer.getDanmuRealTime());
                 if (!willHit) {
                     insertItem = item;
                     return ACTION_BREAK;
@@ -346,7 +347,7 @@ public class DanmakusRetainer {
 
                 // 检查碰撞
                 willHit = DanmakuUtils.willHitInDuration(disp, item, drawItem,
-                        drawItem.getDuration(), drawItem.getDanmuCurrentTime());
+                        drawItem.getDuration(), DanmuSystemTimer.getDanmuRealTime());
                 if (!willHit) {
                     removeItem = item;
                     // topPos = item.getBottom() - drawItem.paintHeight;

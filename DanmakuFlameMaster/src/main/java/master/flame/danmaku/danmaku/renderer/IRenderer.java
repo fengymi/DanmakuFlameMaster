@@ -66,7 +66,7 @@ public interface IRenderer {
         public final static int UNKNOWN_TIME = -1;
 
         public boolean isRunningDanmakus;
-        public DanmakuTimer timer = new DanmakuTimer();
+        public DanmakuTimer timer = new DanmakuTimer(true);
         public int indexInScreen;
         public int totalSizeInScreen;
         public BaseDanmaku lastDanmaku;

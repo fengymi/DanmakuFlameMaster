@@ -12,7 +12,7 @@ public class DanmakuTimer {
      * 视频播放器的当前时间戳（毫秒）
      * 由VideoManager直接更新
      */
-    public static long videoTime;
+    public static volatile long videoTime;
     
     /**
      * 是否使用播放器的原始时间
@@ -20,6 +20,8 @@ public class DanmakuTimer {
      * false: 使用内部计时
      */
     public static boolean useVideoTime = false;
+
+    private boolean selfUseSystemTime;
     
     /**
      * 调试模式
@@ -45,9 +47,15 @@ public class DanmakuTimer {
     private long lastInterval;
 
     public DanmakuTimer() {
+        this(false);
+    }
+
+    public DanmakuTimer(boolean selfUseSystemTime) {
+        this.selfUseSystemTime = selfUseSystemTime;
     }
 
     public DanmakuTimer(long curr) {
+        this(false);
         update(curr);
     }
 
@@ -58,7 +66,7 @@ public class DanmakuTimer {
      */
     public long update(long curr) {
         // 如果启用了播放器时间同步，则始终使用videoTime
-        if (useVideoTime) {
+        if (useVideoTime && !selfUseSystemTime) {
             long realTime = videoTime;
             lastInterval = realTime - currMillisecond;
             currMillisecond = realTime;

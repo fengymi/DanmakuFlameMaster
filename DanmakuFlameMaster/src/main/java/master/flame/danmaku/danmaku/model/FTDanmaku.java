@@ -69,7 +69,7 @@ public class FTDanmaku extends BaseDanmaku {
     }
 
     @Override
-    public float[] getRectAtTime(IDisplayer displayer, long time) {
+    public float[] getRectAtTime(IDisplayer displayer, long time, long tempBaseTime) {
         if (!isMeasured())
             return null;
         float left = getLeft(displayer);
