@@ -56,8 +56,8 @@ public class DanmuSystemTimer {
             return;
         }
 
-        String originDanmuRealBaseTimeStr = DanmakuTimer.formatTime(danmuRealBaseTime);
-        long originDanmuBaseTime = danmuBaseTime;
+//        String originDanmuRealBaseTimeStr = DanmakuTimer.formatTime(danmuRealBaseTime);
+//        long originDanmuBaseTime = danmuBaseTime;
 
         resetBaseTime(false, 0);
         SystemClock.setVideoSpeed();

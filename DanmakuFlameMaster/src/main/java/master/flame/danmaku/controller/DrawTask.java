@@ -17,6 +17,7 @@
 package master.flame.danmaku.controller;
 
 import android.graphics.Canvas;
+import android.util.Log;
 
 import java.util.Objects;
 
@@ -227,18 +228,20 @@ public class DrawTask implements IDrawTask {
 
     @Override
     public IDanmakus getVisibleDanmakusOnTime(long time) {
-        long beginMills = time - mContext.mDanmakuFactory.MAX_DANMAKU_DURATION - 100;
-        long endMills = time + mContext.mDanmakuFactory.MAX_DANMAKU_DURATION;
-        IDanmakus subDanmakus = null;
-        int i = 0;
-        while (i++ < 3) {  //avoid ConcurrentModificationException
-            try {
-                subDanmakus = danmakuList.subnew(beginMills, endMills);
-                break;
-            } catch (Exception e) {
+//        long beginMills = time - mContext.mDanmakuFactory.MAX_DANMAKU_DURATION - 100;
+//        long endMills = time + mContext.mDanmakuFactory.MAX_DANMAKU_DURATION;
+//        IDanmakus subDanmakus = null;
+//        int i = 0;
+//        while (i++ < 3) {  //avoid ConcurrentModificationException
+//            try {
+//                subDanmakus = danmakuList.subnew(beginMills, endMills);
+//                break;
+//            } catch (Exception e) {
+//
+//            }
+//        }
 
-            }
-        }
+        IDanmakus subDanmakus = danmakus;
         final IDanmakus visibleDanmakus = new Danmakus();
         if (null != subDanmakus && !subDanmakus.isEmpty()) {
             subDanmakus.forEachSync(new IDanmakus.DefaultConsumer<BaseDanmaku>() {
@@ -357,6 +360,7 @@ public class DrawTask implements IDrawTask {
             clearRetainerFlag = false;
         }
         if (danmakuList != null) {
+            long start = System.currentTimeMillis();
             Canvas canvas = (Canvas) disp.getExtraData();
             DrawHelper.clearCanvas(canvas);
             if (mIsHidden && !mRequestRender) {
@@ -370,7 +374,7 @@ public class DrawTask implements IDrawTask {
             long endMills = timer.getCurrMillisecond() + mContext.mDanmakuFactory.MAX_DANMAKU_DURATION;
             // 只捞取当前最后一个弹幕之后的时间
             BaseDanmaku last = danmakus.last();
-            if (Objects.nonNull(last)) {
+            if (last != null) {
                 beginMills = Math.max(beginMills, last.getActualTime() + 1);
             }
 
@@ -382,7 +386,7 @@ public class DrawTask implements IDrawTask {
 
                 BaseDanmaku first = danmakus.first();
                 last = danmakus.last();
-                if (Objects.nonNull(first) && Objects.nonNull(last)) {
+                if (first != null && last != null) {
                     mLastBeginMills = first.getActualTime();
                     mLastEndMills = last.getActualTime();
                 }
@@ -419,6 +423,8 @@ public class DrawTask implements IDrawTask {
                         renderingState.endTime = endMills;
                     }
                 }
+
+                Log.d("drawDanmakus", "渲染完成 数量=" + screenDanmakus.size() + ", 耗时=" + (System.currentTimeMillis() - start) + "ms");
                 return renderingState;
             } else {
                 renderingState.nothingRendered = true;

@@ -1,9 +1,5 @@
 package master.flame.danmaku.danmaku.util;
 
-import android.util.Log;
-
-import master.flame.danmaku.danmaku.model.DanmakuTimer;
-
 /**
  * Created by ch on 15-12-9.
  */
@@ -11,7 +7,7 @@ public class SystemClock {
     /**
      * 使用系统时间类计算流逝时间
      */
-    public static boolean useSystemClock = true;
+    public static boolean useSystemClock = false;
 
     /**
      * 基础时间
@@ -22,7 +18,6 @@ public class SystemClock {
      * 上次最后时间
      */
     private static long lastSystemClockTimeMillis = baseTime;
-    private static boolean playing = true;
 
     public static long uptimeMillis() {
         return calcVideoBaseTime();
@@ -66,7 +61,6 @@ public class SystemClock {
      */
     public static void setPlaying(boolean playing) {
         reset();
-        SystemClock.playing = playing;
     }
 
     /**

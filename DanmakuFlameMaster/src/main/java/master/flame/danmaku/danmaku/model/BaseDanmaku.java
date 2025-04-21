@@ -28,7 +28,7 @@ import master.flame.danmaku.danmaku.util.SystemClock;
 public abstract class BaseDanmaku {
     @Override
     public String toString() {
-        return "text:" + text + ", time:" + time + ", duration=" + (Objects.isNull(duration) ? null : duration.value);
+        return "text:" + text + ", time:" + time + ", duration=" + (duration == null ? null : duration.value);
     }
 
     public final static String DANMAKU_BR_CHAR = "/n";

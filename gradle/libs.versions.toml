@@ -1,8 +1,8 @@
 [versions]
-android-compileSdk = "34"
+android-compileSdk = "21"
 android-gradle = "8.5.2"
 android-minSdk = "21"
-android-targetSdk = "34"
+android-targetSdk = "21"
 androidMavenGradlePlugin = "2.1"
 annotation = "1.8.2"
 gradleBintrayPlugin = "1.7"

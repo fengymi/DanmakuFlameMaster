@@ -89,10 +89,7 @@ public class FakeDanmakuView extends DanmakuView implements DrawHandler.Callback
                         item.mFilterParam = danmaku.mFilterParam;
                         item.filterResetFlag = danmaku.filterResetFlag;
                         item.flags = mContext.mGlobalFlagValues;
-                        Object lock = danmakus.obtainSynchronizer();
-                        synchronized (lock) {
-                            danmakus.addItem(item);
-                        }
+                        danmakus.addItem(item);
                     }
                     return 0;
                 }
