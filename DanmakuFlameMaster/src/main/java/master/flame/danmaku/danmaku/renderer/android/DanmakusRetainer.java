@@ -16,6 +16,10 @@
 
 package master.flame.danmaku.danmaku.renderer.android;
 
+import android.util.Log;
+
+import java.util.Collection;
+
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
 import master.flame.danmaku.danmaku.model.IDanmakus;
 import master.flame.danmaku.danmaku.model.IDisplayer;
@@ -104,7 +108,7 @@ public class DanmakusRetainer {
 
     }
 
-    private static class RetainerState {
+    public static class RetainerState {
         public int lines = 0;
         public BaseDanmaku insertItem = null, firstItem = null, lastItem = null, minRightRow = null, removeItem = null;
         public boolean overwriteInsert = false;
@@ -164,6 +168,7 @@ public class DanmakusRetainer {
                         drawItem.getDuration(), DanmuSystemTimer.getDanmuRealTime());
                 if (!willHit) {
                     insertItem = item;
+//                    Log.d("hitTest", "未碰撞, item=" + item + ", drawItem=" + drawItem + ", lines=" + lines);
                     return ACTION_BREAK;
                 }
 
@@ -208,6 +213,15 @@ public class DanmakusRetainer {
                 boolean overwriteInsert = false;
                 mConsumer.disp = disp;
                 mConsumer.drawItem = drawItem;
+
+//                if (mVisibleDanmakus.contains(drawItem)) {
+//                    mConsumer.before();
+//                    mConsumer.accept(drawItem);
+//                    mConsumer.after();
+//                    mConsumer.lines = drawItem.showLine;
+//                } else {
+//                    mVisibleDanmakus.forEachSync(mConsumer);
+//                }
                 mVisibleDanmakus.forEachSync(mConsumer);
                 RetainerState retainerState = mConsumer.result();
                 if (retainerState != null) {
@@ -258,6 +272,7 @@ public class DanmakusRetainer {
                 if (topPos == disp.getAllMarginTop()) {
                     shown = false;
                 }
+//                Log.d("fix", "AlignTopRetainer init insertItem=" + insertItem + ", lastItem=" + lastItem + ", overwriteInsert=" + overwriteInsert + ", minRightRow=" + minRightRow + ", topPos=" + topPos + ", checkEdge=" + checkEdge + ", isOutOfVertialEdge=" + isOutOfVertialEdge + ", lines=" + lines);
             }
 
             if (verifier != null && verifier.skipLayout(drawItem, topPos, lines, willHit)) {
@@ -273,6 +288,7 @@ public class DanmakusRetainer {
             if (!shown) {
                 mVisibleDanmakus.removeItem(removeItem);
                 mVisibleDanmakus.addItem(drawItem);
+//                Log.d("fix", "AlignTopRetainer lines=" + lines + ", removeItem=" + removeItem + ", addItem=" + drawItem);
             }
 
         }
@@ -425,6 +441,7 @@ public class DanmakusRetainer {
                 clear();
             }
 
+//            Log.d("fix", "AlignBottomRetainer shown=" + shown + ", 弹幕信息=" + drawItem);
             drawItem.layout(disp, drawItem.getLeft(), topPos);
 
             if (!shown) {

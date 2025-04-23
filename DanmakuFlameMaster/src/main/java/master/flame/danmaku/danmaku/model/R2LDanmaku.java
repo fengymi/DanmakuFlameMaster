@@ -17,6 +17,8 @@
 package master.flame.danmaku.danmaku.model;
 
 
+import android.util.Log;
+
 import master.flame.danmaku.danmaku.util.SystemClock;
 
 public class R2LDanmaku extends BaseDanmaku {
@@ -33,7 +35,7 @@ public class R2LDanmaku extends BaseDanmaku {
 
     protected float[] RECT = null;
 
-    protected float mStepX;
+    public float mStepX;
 
     protected long mLastTime;
 
@@ -47,7 +49,7 @@ public class R2LDanmaku extends BaseDanmaku {
             long[] timeResult = getTimeResult();
             long currMS = timeResult[0];
             long deltaDuration = timeResult[1];
-            if (deltaDuration > 0 && deltaDuration < duration.value) {
+            if (deltaDuration < duration.value) {
                 this.x = getAccurateLeft(displayer, currMS);
                 if (!this.isShown()) {
                     this.y = y;
@@ -124,6 +126,7 @@ public class R2LDanmaku extends BaseDanmaku {
         super.measure(displayer, fromWorkerThread);
         mDistance = (int) (displayer.getWidth() + paintWidth);
         mStepX = mDistance / (float) duration.value;
+        x = displayer.getWidth();
     }
 
 }

@@ -22,27 +22,7 @@ public class L2RDanmaku extends R2LDanmaku {
     public L2RDanmaku(Duration duration) {
         super(duration); 
     }
-    
-    @Override
-    public void layout(IDisplayer displayer, float x, float y) {
-        if (mTimer != null) {
-            long[] timeResult = getTimeResult();
-            long currMS = timeResult[0];
-            long deltaDuration = timeResult[1];
-            if (deltaDuration > 0 && deltaDuration < duration.value) {
-                this.x = getAccurateLeft(displayer, currMS);
-                if (!this.isShown()) {
-                    this.y = y;
-                    this.setVisibility(true);
-                }
-                mLastTime = currMS;
-                return;
-            }
-            mLastTime = currMS;
-        }
-        this.setVisibility(false);
-    }
-    
+
     @Override
     public float[] getRectAtTime(IDisplayer displayer, long time, long tempBaseTime) {
         if (!isMeasured())
@@ -72,28 +52,13 @@ public class L2RDanmaku extends R2LDanmaku {
     }
 
     @Override
-    public float getLeft() {
-        return x;
-    }
-
-    @Override
-    public float getTop() {
-        return y;
-    }
-
-    @Override
-    public float getRight() {
-        return x + paintWidth;
-    }
-
-    @Override
-    public float getBottom() {
-        return y + paintHeight;
-    }
-
-    @Override
     public int getType() {
         return TYPE_SCROLL_LR;
     }
 
+    @Override
+    public void measure(IDisplayer displayer, boolean fromWorkerThread) {
+        super.measure(displayer, fromWorkerThread);
+        x = -paintWidth;
+    }
 }

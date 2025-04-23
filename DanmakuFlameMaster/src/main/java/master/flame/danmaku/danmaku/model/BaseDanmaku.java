@@ -28,7 +28,7 @@ import master.flame.danmaku.danmaku.util.SystemClock;
 public abstract class BaseDanmaku {
     @Override
     public String toString() {
-        return "text:" + text + ", time:" + time + ", duration=" + (duration == null ? null : duration.value);
+        return "text:" + text + ", time:" + time + ", duration=" + (duration == null ? null : duration.value) + ", left=" + getLeft() + ", right=" + getRight() + ", top=" + getTop() + ", shown=" + isShown();
     }
 
     public final static String DANMAKU_BR_CHAR = "/n";
@@ -61,7 +61,7 @@ public abstract class BaseDanmaku {
     /**
      * 显示时间(毫秒)
      */
-    public long time;
+    private long time;
 
     /**
      * 偏移时间
@@ -283,6 +283,12 @@ public abstract class BaseDanmaku {
 
     public int draw(IDisplayer displayer) {
         if (!drawn) {
+            // 未到显示时间
+            long[] timeResult = getTimeResult();
+            if (timeResult[1] < 0) {
+                return IRenderer.NOTHING_RENDERING;
+            }
+
             drawn = true;
             firstShowTime = DanmuSystemTimer.getDanmuRealTime();
             return IRenderer.NOTHING_RENDERING;

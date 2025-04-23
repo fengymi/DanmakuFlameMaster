@@ -17,12 +17,14 @@
 package master.flame.danmaku.danmaku.util;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import master.flame.danmaku.danmaku.model.AbsDisplayer;
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
 import master.flame.danmaku.danmaku.model.DanmakuTimer;
 import master.flame.danmaku.danmaku.model.IDisplayer;
 import master.flame.danmaku.danmaku.model.IDrawingCache;
+import master.flame.danmaku.danmaku.model.R2LDanmaku;
 import master.flame.danmaku.danmaku.model.android.DrawingCache;
 import master.flame.danmaku.danmaku.model.android.DrawingCacheHolder;
 
@@ -37,16 +39,17 @@ public class DanmakuUtils {
      */
     public static boolean willHitInDuration(IDisplayer disp, BaseDanmaku d1, BaseDanmaku d2,
             long duration, long currTime) {
-//        Log.d("DanmakuUtils", "冲突判定 对比 d1=" + d1.toString() + ", d2=" + d2.toString());
+//        Log.d("DanmakuUtils", "冲突判定 对比 d1=" + d1.toString() + ", outTimeout=" + d1.isTimeOut() + ", d2=" + d2.toString() + ", outTimeout=" + d2.isTimeOut());
         final int type1 = d1.getType();
         final int type2 = d2.getType();
         // allow hit if different type
         if(type1 != type2)
             return false;
-        
-        if(d1.isOutside()){
-            return false;
-        }
+
+        // 允许还未出现的弹幕
+//        if(d1.isOutside()){
+//            return false;
+//        }
         long dTime = d2.getActualTime() - d1.getActualTime();
         if (dTime <= 0)
             return true;
@@ -65,7 +68,7 @@ public class DanmakuUtils {
 //        boolean currentHit = checkHitAtTime(disp, d1, d2, 0, currTime);
 //        boolean afterHit = checkHitAtTime(disp, d1, d2, duration, currTime);
 //
-////        Log.d("DanmakuUtils", "冲突判定 当前=" + currentHit + ", afterHit=" + afterHit + ", text1=" + d1.text + ", text2=" + d2.text);
+//        Log.d("DanmakuUtils", "冲突判定 当前=" + currentHit + ", afterHit=" + afterHit + ", text1=" + d1.text + ", text2=" + d2.text);
         return checkHitAtTime(disp, d1, d2, 0, currTime) || checkHitAtTime(disp, d1, d2, duration, currTime);
     }
 
@@ -199,7 +202,7 @@ public class DanmakuUtils {
         }
         // 调试显示弹幕时间
         if (DanmakuTimer.debug) {
-            danmaku.text = DanmakuTimer.formatTime(danmaku.time) + " " + danmaku.text;
+            danmaku.text = DanmakuTimer.formatTime(danmaku.getActualTime()) + " " + danmaku.text;
         }
 
         if (!text.toString().contains(BaseDanmaku.DANMAKU_BR_CHAR)) {

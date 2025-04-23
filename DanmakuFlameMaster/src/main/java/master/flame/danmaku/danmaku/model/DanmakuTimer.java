@@ -110,6 +110,6 @@ public class DanmakuTimer {
 
         long second = allSecond % 60;
         long minute = allSecond / 60;
-        return String.format("%02d:%02d.%03d", minute, second, allMiSecond);
+        return String.format("%02d:%02d", minute, second);
     }
 }

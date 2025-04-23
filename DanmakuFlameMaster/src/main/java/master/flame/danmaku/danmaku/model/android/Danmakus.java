@@ -86,7 +86,7 @@ public class Danmakus implements IDanmakus {
         } else {
             mDuplicateMergingEnabled = duplicateMergingEnabled;
             comparator.setDuplicateMergingEnabled(duplicateMergingEnabled);
-            items = new ConcurrentSkipListSet<>(comparator);
+            items = new TreeSet<>(comparator);
             mComparator = comparator;
         }
         itemsLock = new ReentrantReadWriteLock();

@@ -28,7 +28,6 @@ import android.util.Log;
 import android.view.Choreographer;
 
 import java.util.LinkedList;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import master.flame.danmaku.danmaku.model.AbsDanmakuSync;
 import master.flame.danmaku.danmaku.model.AbsDisplayer;
@@ -372,8 +371,7 @@ public class DrawHandler extends Handler {
                 }
             case PAUSE:
                 removeMessages(DrawHandler.RESUME);
-//                removeMessages(UPDATE);
-                stopRender();
+                removeMessages(UPDATE);
                 if (drawTask != null) {
                     drawTask.onPlayStateChanged(IDrawTask.PLAY_STATE_PAUSE);
                 }
@@ -390,10 +388,9 @@ public class DrawHandler extends Handler {
                     quitUpdateThread();
                 }
                 if (mFrameCallback != null) {
-                    stopRender();
-//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-//                        Choreographer.getInstance().removeFrameCallback(mFrameCallback);
-//                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                        Choreographer.getInstance().removeFrameCallback(mFrameCallback);
+                    }
                 }
                 if (what == QUIT){
                     if (this.drawTask != null){
@@ -546,52 +543,11 @@ public class DrawHandler extends Handler {
 
     @TargetApi(16)
     private class FrameCallback implements Choreographer.FrameCallback {
-        private static final long ONE_MS = 1000_000L;
-        private static final long ONE_S = 1000 * ONE_MS;
-        private final int TARGET_FPS = 60;
-        private volatile long mLastFrameTimeNanos = 0L;
-
-        protected long ONE_FPS_NS = ONE_S / TARGET_FPS;
         @Override
         public void doFrame(long frameTimeNanos) {
             sendEmptyMessage(UPDATE);
-
-//            long start = System.currentTimeMillis();
-//            updateInChoreographer();
-//            long end = System.currentTimeMillis();
-//
-//            // 计算下一帧的触发时间
-////            long nextDelayNanos = ONE_FPS_NS - (frameTimeNanos - mLastFrameTimeNanos);
-//
-//
-//            long nextDelayNanos = ONE_FPS_NS - (System.nanoTime() - frameTimeNanos);
-//            Log.d("FrameCallback", "本次渲染耗时: " + (end - start) + ", 下一帧渲染时间: " + nextDelayNanos + ", mLastFrameTimeNanos=" + mLastFrameTimeNanos + ", frameTimeNanos=" + frameTimeNanos + ", ONE_FPS_NS=" + ONE_FPS_NS);
-//            mLastFrameTimeNanos = frameTimeNanos;
-//
-//            // 延迟触发下一帧
-//            if (nextDelayNanos > ONE_MS) {
-//                Choreographer.getInstance().postFrameCallbackDelayed(this, nextDelayNanos / ONE_MS);
-//            } else {
-//                // 如果延迟不足，立即触发
-//                Choreographer.getInstance().postFrameCallback(this);
-//            }
         }
     };
-
-    private final AtomicBoolean startRender = new AtomicBoolean(false);
-
-    protected void startRender() {
-        if (startRender.compareAndSet(false, true)) {
-            Choreographer.getInstance().postFrameCallback(mFrameCallback);
-        }
-    }
-
-    protected void stopRender() {
-        removeMessages(UPDATE);
-//        if (startRender.compareAndSet(true, false)) {
-//            Choreographer.getInstance().removeFrameCallback(mFrameCallback);
-//        }
-    }
 
     @TargetApi(16)
     private void updateInChoreographer() {
@@ -910,9 +866,6 @@ public class DrawHandler extends Handler {
             mDrawTimes.clear();
             removeMessages(UPDATE);
             sendEmptyMessage(UPDATE);
-
-//            stopRender();
-//            startRender();
         }
         mInWaitingState = false;
     }
@@ -942,12 +895,10 @@ public class DrawHandler extends Handler {
         } else {
             if (dTime == INDEFINITE_TIME) {
                 removeMessages(NOTIFY_RENDERING);
-//                removeMessages(UPDATE);
-                stopRender();
+                removeMessages(UPDATE);
             } else {
                 removeMessages(NOTIFY_RENDERING);
-//                removeMessages(UPDATE);
-                stopRender();
+                removeMessages(UPDATE);
                 sendEmptyMessageDelayed(NOTIFY_RENDERING, dTime);
             }
         }
