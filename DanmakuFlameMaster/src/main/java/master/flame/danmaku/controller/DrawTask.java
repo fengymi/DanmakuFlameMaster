@@ -131,7 +131,14 @@ public class DrawTask implements IDrawTask {
                 if (!bufferCalculatorRunning.get()) {
                     return;
                 }
-                autoCalcNeedShowDanmakus(timer.getCurrMillisecond());
+
+                if (mReadyState) {
+                    try {
+                        autoCalcNeedShowDanmakus(timer.getCurrMillisecond());
+                    } catch (Exception e) {
+                        Log.e("autoCalc", "计算缓存失败, 跳过本次计算 , e=", e);
+                    }
+                }
                 bufferCalculatorHandler.postDelayed(this, BUFFER_CALCULATOR_TIME_GAP);
             }
         };
@@ -139,11 +146,12 @@ public class DrawTask implements IDrawTask {
 
     private void danmakusContainerReset() {
         for (int i = 0; i < danmakusContainer.length; i++) {
-            danmakusContainer[i] = new Danmakus(Danmakus.ST_BY_LIST);
+            danmakusContainer[i] = new Danmakus(Danmakus.ST_BY_LIST, false, null, false);
         }
         showIndex = new AtomicInteger(0);
         bufferShowIndex = new AtomicInteger(0);
         bufferCalculated = new AtomicBoolean(false);
+        bufferCalculateStop();
     }
 
     protected void bufferCalculateStart() {
@@ -152,8 +160,9 @@ public class DrawTask implements IDrawTask {
         }
     }
     protected void bufferCalculateStop() {
-        bufferCalculatorRunning.set(false);
-        bufferCalculatorHandler.removeCallbacks(bufferCalculator);
+        if (bufferCalculatorRunning.compareAndSet(true, false)) {
+            bufferCalculatorHandler.removeCallbacks(bufferCalculator);
+        }
     }
 
     protected void initTimer(DanmakuTimer timer) {
@@ -313,6 +322,7 @@ public class DrawTask implements IDrawTask {
     @Override
     public void start() {
         mContext.registerConfigChangedCallback(mConfigChangedCallback);
+        bufferCalculateStart();
     }
 
     @Override
@@ -320,6 +330,7 @@ public class DrawTask implements IDrawTask {
         mContext.unregisterAllConfigChangedCallbacks();
         if (mRenderer != null)
             mRenderer.release();
+        bufferCalculateStop();
     }
 
     public void prepare() {
@@ -409,13 +420,15 @@ public class DrawTask implements IDrawTask {
         nextNeedShowDanmakus.forEach(timeOutRemover);
         nextNeedShowDanmakus.addAllItem(newNeedAddItems.getCollection());
 
+//        BaseDanmaku nextFirst = nextNeedShowDanmakus.first();
+//        BaseDanmaku nextLast = nextNeedShowDanmakus.last();
+//        Log.d("autoCalc", "缓冲区计算完成 耗时=" + (System.currentTimeMillis() - startTime) + ", 计算前数量=" + currentShowDanmakus.size() + ", 计算后数量=" + nextNeedShowDanmakus.size() + ", 计算时间=" + DanmakuTimer.formatTime(currentTime) + ", 下次时间范围[" + (nextFirst == null ? "无" : DanmakuTimer.formatTime(nextFirst.getActualTime())) + "," + (nextLast == null ? "无" : DanmakuTimer.formatTime(nextLast.getActualTime())) + "]");
         // 标记缓存计算完成
         if (bufferCalculated.compareAndSet(false, true)) {
             // 标记需要展示的容器为新容器
             bufferShowIndex.set(calcNextShowIndex);
         }
 
-        Log.d("autoCalc", "缓冲区计算完成 耗时=" + (System.currentTimeMillis() - startTime) + ", 计算前数量=" + currentShowDanmakus.size() + ", 计算后数量=" + nextNeedShowDanmakus.size());
     }
 
     private static class TimeOutRemover extends IDanmakus.Consumer<BaseDanmaku, Object>{

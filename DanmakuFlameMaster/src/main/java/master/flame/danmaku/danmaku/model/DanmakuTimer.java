@@ -19,7 +19,7 @@ public class DanmakuTimer {
      * true: 使用videoTime作为时间源
      * false: 使用内部计时
      */
-    public static boolean useVideoTime = false;
+    public static boolean useVideoTime = true;
 
     private boolean selfUseSystemTime;
     

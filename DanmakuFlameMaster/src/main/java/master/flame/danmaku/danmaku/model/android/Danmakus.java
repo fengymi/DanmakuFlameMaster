@@ -69,6 +69,10 @@ public class Danmakus implements IDanmakus {
     }
 
     public Danmakus(int sortType, boolean duplicateMergingEnabled, BaseComparator baseComparator) {
+        this(sortType, duplicateMergingEnabled, baseComparator, true);
+    }
+
+    public Danmakus(int sortType, boolean duplicateMergingEnabled, BaseComparator baseComparator, boolean needLock) {
         BaseComparator comparator = null;
         if (sortType == ST_BY_TIME) {
             comparator = baseComparator == null ? new TimeComparator(duplicateMergingEnabled) : baseComparator;
@@ -89,9 +93,16 @@ public class Danmakus implements IDanmakus {
             items = new TreeSet<>(comparator);
             mComparator = comparator;
         }
-        itemsLock = new ReentrantReadWriteLock();
+
+        if (needLock) {
+            itemsLock = new ReentrantReadWriteLock();
+        }
 
         mSortType = sortType;
+    }
+
+    public void setItemsLock(ReadWriteLock itemsLock) {
+        this.itemsLock = itemsLock;
     }
 
     public Danmakus(Collection<BaseDanmaku> items) {
@@ -326,22 +337,38 @@ public class Danmakus implements IDanmakus {
     }
 
     protected void readLock(Runnable runnable) {
-//        Lock lock = null; //itemsLock.readLock();
-        lockRun(null, runnable);
+        Lock lock = getReadLock();
+        lockRun(lock, runnable);
     }
 
     protected <T> T readLock(Supplier<T> supplier) {
-//        Lock lock = itemsLock.writeLock();
-        return lockRun(null, supplier);
+        Lock lock = getReadLock();
+        return lockRun(lock, supplier);
     }
 
     protected void writeLock(Runnable runnable) {
-//        Lock lock = itemsLock.writeLock();
-        lockRun(null, runnable);
+        Lock lock = getWriteLock();
+        lockRun(lock, runnable);
     }
 
     protected <T> T writeLock(Supplier<T> supplier) {
-//        Lock lock = itemsLock.writeLock();
-        return lockRun(null, supplier);
+        Lock lock = getWriteLock();
+        return lockRun(lock, supplier);
+    }
+
+    protected Lock getReadLock() {
+        if (itemsLock == null) {
+            return null;
+        }
+
+        return itemsLock.readLock();
+    }
+
+    protected Lock getWriteLock() {
+        if (itemsLock == null) {
+            return null;
+        }
+
+        return itemsLock.writeLock();
     }
 }
