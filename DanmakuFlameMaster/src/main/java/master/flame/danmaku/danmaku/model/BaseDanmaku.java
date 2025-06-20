@@ -18,9 +18,18 @@ package master.flame.danmaku.danmaku.model;
 
 import android.util.SparseArray;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import master.flame.danmaku.danmaku.renderer.IRenderer;
+import master.flame.danmaku.danmaku.util.DanmuSystemTimer;
+import master.flame.danmaku.danmaku.util.SystemClock;
+
 public abstract class BaseDanmaku {
+    @Override
+    public String toString() {
+        return "text:" + text + ", time:" + time + ", duration=" + (duration == null ? null : duration.value) + ", left=" + getLeft() + ", right=" + getRight() + ", top=" + getTop() + ", shown=" + isShown();
+    }
 
     public final static String DANMAKU_BR_CHAR = "/n";
 
@@ -52,7 +61,7 @@ public abstract class BaseDanmaku {
     /**
      * 显示时间(毫秒)
      */
-    public long time;
+    private long time;
 
     /**
      * 偏移时间
@@ -242,8 +251,58 @@ public abstract class BaseDanmaku {
         this.duration = duration;
     }
 
+    /**
+     * 时间容器
+     */
+    private final long[] timeResult = new long[2];
+    private boolean drawn = false;
+    protected long firstShowTime;
+    protected long showTime;
+
+    /**
+     * 获取当前时间和时间间隔
+     * @return 时间
+     */
+    protected long[] getTimeResult() {
+        long currMS = mTimer.getCurrMillisecond();
+        long deltaDuration = currMS - getActualTime();
+
+        // 已经在显示中
+        if (isDrawn()) {
+            long currentTime = DanmuSystemTimer.getDanmuRealTime();
+            deltaDuration = currentTime - firstShowTime;
+
+            showTime += deltaDuration;
+            currMS = getActualTime() + deltaDuration;
+        }
+
+        timeResult[0] = currMS;
+        timeResult[1] = deltaDuration;
+        return timeResult;
+    }
+
     public int draw(IDisplayer displayer) {
+        if (!drawn) {
+            // 未到显示时间
+            long[] timeResult = getTimeResult();
+            if (timeResult[1] < 0) {
+                return IRenderer.NOTHING_RENDERING;
+            }
+
+            drawn = true;
+            firstShowTime = DanmuSystemTimer.getDanmuRealTime();
+            return IRenderer.NOTHING_RENDERING;
+        }
+
         return displayer.draw(this);
+    }
+
+    public boolean isDrawn() {
+        return drawn;
+    }
+
+    public long getFirstShowTime() {
+        return firstShowTime;
     }
 
     public boolean isMeasured() {
@@ -275,7 +334,7 @@ public abstract class BaseDanmaku {
     }
 
     public boolean isTimeOut() {
-        return mTimer == null || isTimeOut(mTimer.currMillisecond);
+        return mTimer == null || isTimeOut(getTimeResult()[0]);
     }
 
     public boolean isTimeOut(long ctime) {
@@ -283,7 +342,7 @@ public abstract class BaseDanmaku {
     }
 
     public boolean isOutside() {
-        return mTimer == null || isOutside(mTimer.currMillisecond);
+        return mTimer == null || isOutside(getTimeResult()[0]);
     }
 
     public boolean isOutside(long ctime) {
@@ -292,7 +351,7 @@ public abstract class BaseDanmaku {
     }
 
     public boolean isLate() {
-        return mTimer == null || mTimer.currMillisecond < getActualTime();
+        return mTimer == null || getTimeResult()[0] < getActualTime();
     }
 
     public boolean hasPassedFilter() {
@@ -321,7 +380,11 @@ public abstract class BaseDanmaku {
 
     public abstract void layout(IDisplayer displayer, float x, float y);
 
-    public abstract float[] getRectAtTime(IDisplayer displayer, long currTime);
+    public float[] getRectAtTime(IDisplayer displayer, long currTime) {
+        return getRectAtTime(displayer, currTime, 0);
+    }
+
+    public abstract float[] getRectAtTime(IDisplayer displayer, long currTime, long tempBaseTime);
 
     public abstract float getLeft();
 
@@ -341,6 +404,13 @@ public abstract class BaseDanmaku {
 
     public DanmakuTimer getTimer() {
         return mTimer;
+    }
+
+    public long getDanmuCurrentTime() {
+        if (isShown()) {
+            return getTimeResult()[0];
+        }
+        return getTimer().getCurrMillisecond();
     }
 
     public void setTimer(DanmakuTimer timer) {

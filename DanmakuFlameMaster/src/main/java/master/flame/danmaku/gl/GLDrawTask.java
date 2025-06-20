@@ -586,8 +586,8 @@ public class GLDrawTask extends DrawTask {
             }
 
             private void buildFutureDanmaku() {
-                long begin = mTimer.currMillisecond + mFutureBeginOffsetBegin;
-                long end = mTimer.currMillisecond + mFutureBeginOffsetEnd;
+                long begin = mTimer.getCurrMillisecond() + mFutureBeginOffsetBegin;
+                long end = mTimer.getCurrMillisecond() + mFutureBeginOffsetEnd;
                 //拉取构建时间内的弹幕
                 IDanmakus danmakus = subnew(begin, end);
                 if (danmakus == null || danmakus.isEmpty()) {
@@ -613,7 +613,7 @@ public class GLDrawTask extends DrawTask {
                         }
                         if (item.getType() == BaseDanmaku.TYPE_SCROLL_RL) {
                             // 同屏弹幕密度只对滚动弹幕有效
-                            int screenIndex = (int) ((item.getActualTime() - mTimer.currMillisecond) / mContext.mDanmakuFactory.MAX_DANMAKU_DURATION);
+                            int screenIndex = (int) ((item.getActualTime() - mTimer.getCurrMillisecond()) / mContext.mDanmakuFactory.MAX_DANMAKU_DURATION);
                             if (currScreenIndex == screenIndex)
                                 orderInScreen++;
                             else {

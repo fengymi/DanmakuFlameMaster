@@ -35,7 +35,7 @@ public class Danmaku extends BaseDanmaku {
     }
 
     @Override
-    public float[] getRectAtTime(IDisplayer displayer, long time) {
+    public float[] getRectAtTime(IDisplayer displayer, long time, long tempBaseTime) {
         return null;
     }
 

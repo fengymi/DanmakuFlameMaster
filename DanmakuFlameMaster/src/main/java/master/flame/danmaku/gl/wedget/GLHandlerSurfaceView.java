@@ -286,16 +286,16 @@ public class GLHandlerSurfaceView extends SurfaceView implements SurfaceHolder.C
         mHandler.onWindowResize(w, h);
     }
 
-    @Override
-    public void surfaceRedrawNeededAsync(SurfaceHolder holder, Runnable finishDrawing) {
-        if (mHandler == null) {
-            return;
-        }
-        if (DEBUG) {
-            Log.i(TAG, "surfaceRedrawNeededAsync");
-        }
-        mHandler.requestRenderAndNotify(finishDrawing);
-    }
+//    @Override
+//    public void surfaceRedrawNeededAsync(SurfaceHolder holder, Runnable finishDrawing) {
+//        if (mHandler == null) {
+//            return;
+//        }
+//        if (DEBUG) {
+//            Log.i(TAG, "surfaceRedrawNeededAsync");
+//        }
+//        mHandler.requestRenderAndNotify(finishDrawing);
+//    }
 
     @Deprecated
     @Override

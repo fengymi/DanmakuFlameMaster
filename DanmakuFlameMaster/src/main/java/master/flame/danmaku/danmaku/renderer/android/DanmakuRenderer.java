@@ -16,6 +16,8 @@
 
 package master.flame.danmaku.danmaku.renderer.android;
 
+import android.util.Log;
+
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
 import master.flame.danmaku.danmaku.model.DanmakuTimer;
 import master.flame.danmaku.danmaku.model.ICacheManager;
@@ -40,7 +42,7 @@ public class DanmakuRenderer extends Renderer {
             lastItem = drawItem;
             if (drawItem.isTimeOut()) {
                 disp.recycle(drawItem);
-                return renderingState.isRunningDanmakus ? ACTION_REMOVE : ACTION_CONTINUE;
+                return ACTION_REMOVE;
             }
 
             if (!renderingState.isRunningDanmakus && drawItem.isOffset()) {
@@ -50,8 +52,7 @@ public class DanmakuRenderer extends Renderer {
             if (!drawItem.hasPassedFilter()) {
                 mContext.mDanmakuFilters.filter(drawItem, renderingState.indexInScreen, renderingState.totalSizeInScreen, renderingState.timer, false, mContext);
             }
-            if (drawItem.getActualTime() < startRenderTime
-                    || (drawItem.priority == 0 && drawItem.isFiltered())) {
+            if ((drawItem.priority == 0 && drawItem.isFiltered())) {
                 return ACTION_CONTINUE;
             }
 
@@ -80,6 +81,7 @@ public class DanmakuRenderer extends Renderer {
 
             // layout
             mDanmakusRetainer.fix(drawItem, disp, mVerifier);
+//            Log.d("DanmakuRenderer 位置计算: ", "left=" + drawItem.getLeft() + ", text=" + drawItem.text);
 
             // draw
             if (drawItem.isShown()) {

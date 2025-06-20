@@ -144,10 +144,7 @@ public class BiliDanmukuParser extends BaseDanmakuParser {
                     if (tagName.equalsIgnoreCase("d")) {
                         item.setTimer(mTimer);
                         item.flags = mContext.mGlobalFlagValues;
-                        Object lock = result.obtainSynchronizer();
-                        synchronized (lock) {
-                            result.addItem(item);
-                        }
+                        result.addItem(item);
                     }
                 }
                 item = null;

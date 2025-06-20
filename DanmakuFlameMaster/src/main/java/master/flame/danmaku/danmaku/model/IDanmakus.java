@@ -18,8 +18,10 @@ package master.flame.danmaku.danmaku.model;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.concurrent.locks.Lock;
 
 import master.flame.danmaku.danmaku.util.DanmakuUtils;
+import master.flame.danmaku.danmaku.util.function.Supplier;
 
 public interface IDanmakus {
 
@@ -73,6 +75,8 @@ public interface IDanmakus {
 
     boolean addItem(BaseDanmaku item);
 
+    boolean addAllItem(Collection<BaseDanmaku> items);
+
     boolean removeItem(BaseDanmaku item);
     
     IDanmakus subnew(long startTime, long endTime);
@@ -99,7 +103,7 @@ public interface IDanmakus {
 
     void forEach(Consumer<? super BaseDanmaku, ?> consumer);
 
-    Object obtainSynchronizer();
+//    Object obtainSynchronizer();
 
     class BaseComparator implements Comparator<BaseDanmaku> {
 
@@ -162,6 +166,33 @@ public interface IDanmakus {
                 return 0;
             }
             return Float.compare(obj2.getTop(), obj1.getTop());
+        }
+    }
+
+    default void lockRun(Lock lock, Runnable runnable) {
+        if (lock == null) {
+            runnable.run();
+            return;
+        }
+
+        lock.lock();
+        try {
+            runnable.run();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    default  <T> T lockRun(Lock lock, Supplier<T> supplier) {
+        if (lock == null) {
+            return supplier.get();
+        }
+
+        lock.lock();
+        try {
+            return supplier.get();
+        } finally {
+            lock.unlock();
         }
     }
 

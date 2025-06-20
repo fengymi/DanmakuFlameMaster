@@ -17,6 +17,9 @@
 package master.flame.danmaku.danmaku.model;
 
 
+import android.util.Log;
+
+import master.flame.danmaku.danmaku.util.SystemClock;
 
 public class R2LDanmaku extends BaseDanmaku {
     
@@ -32,7 +35,7 @@ public class R2LDanmaku extends BaseDanmaku {
 
     protected float[] RECT = null;
 
-    protected float mStepX;
+    public float mStepX;
 
     protected long mLastTime;
 
@@ -43,9 +46,10 @@ public class R2LDanmaku extends BaseDanmaku {
     @Override
     public void layout(IDisplayer displayer, float x, float y) {
         if (mTimer != null) {
-            long currMS = mTimer.currMillisecond;
-            long deltaDuration = currMS - getActualTime();
-            if (deltaDuration > 0 && deltaDuration < duration.value) {
+            long[] timeResult = getTimeResult();
+            long currMS = timeResult[0];
+            long deltaDuration = timeResult[1];
+            if (deltaDuration < duration.value) {
                 this.x = getAccurateLeft(displayer, currMS);
                 if (!this.isShown()) {
                     this.y = y;
@@ -59,8 +63,13 @@ public class R2LDanmaku extends BaseDanmaku {
         this.setVisibility(false);
     }
 
-    protected float getAccurateLeft(IDisplayer displayer, long currTime) {
-        long elapsedTime = currTime - getActualTime();
+    protected float getAccurateLeft(IDisplayer displayer, long currTime, long tempBaseTime) {
+        long actualBaseTime = getActualTime();
+        if (tempBaseTime > 0) {
+            actualBaseTime = tempBaseTime;
+        }
+
+        long elapsedTime = currTime - actualBaseTime;
         if (elapsedTime >= duration.value) {
             return -paintWidth;
         }
@@ -68,11 +77,15 @@ public class R2LDanmaku extends BaseDanmaku {
         return displayer.getWidth() - elapsedTime * mStepX;
     }
 
+    protected float getAccurateLeft(IDisplayer displayer, long currTime) {
+        return getAccurateLeft(displayer, currTime, 0);
+    }
+
     @Override
-    public float[] getRectAtTime(IDisplayer displayer, long time) {
+    public float[] getRectAtTime(IDisplayer displayer, long time, long tempBaseTime) {
         if (!isMeasured())
             return null;
-        float left = getAccurateLeft(displayer, time);
+        float left = getAccurateLeft(displayer, time, tempBaseTime);
         if (RECT == null) {
             RECT = new float[4];
         }
@@ -113,6 +126,7 @@ public class R2LDanmaku extends BaseDanmaku {
         super.measure(displayer, fromWorkerThread);
         mDistance = (int) (displayer.getWidth() + paintWidth);
         mStepX = mDistance / (float) duration.value;
+        x = displayer.getWidth();
     }
 
 }

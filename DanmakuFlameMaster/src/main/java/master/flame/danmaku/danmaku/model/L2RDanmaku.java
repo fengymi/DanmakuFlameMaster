@@ -22,31 +22,12 @@ public class L2RDanmaku extends R2LDanmaku {
     public L2RDanmaku(Duration duration) {
         super(duration); 
     }
-    
+
     @Override
-    public void layout(IDisplayer displayer, float x, float y) {
-        if (mTimer != null) {
-            long currMS = mTimer.currMillisecond;
-            long deltaDuration = currMS - getActualTime();
-            if (deltaDuration > 0 && deltaDuration < duration.value) {
-                this.x = getAccurateLeft(displayer, currMS);
-                if (!this.isShown()) {
-                    this.y = y;
-                    this.setVisibility(true);
-                }
-                mLastTime = currMS;
-                return;
-            }
-            mLastTime = currMS;
-        }
-        this.setVisibility(false);
-    }
-    
-    @Override
-    public float[] getRectAtTime(IDisplayer displayer, long time) {
+    public float[] getRectAtTime(IDisplayer displayer, long time, long tempBaseTime) {
         if (!isMeasured())
             return null;
-        float left = getAccurateLeft(displayer, time);
+        float left = getAccurateLeft(displayer, time, tempBaseTime);
         if (RECT == null) {
             RECT = new float[4];
         }
@@ -57,8 +38,13 @@ public class L2RDanmaku extends R2LDanmaku {
         return RECT;
     }
 
-    protected float getAccurateLeft(IDisplayer displayer, long currTime) {
-        long elapsedTime = currTime - getActualTime();
+    protected float getAccurateLeft(IDisplayer displayer, long currTime, long tempBaseTime) {
+        long actualBaseTime = getActualTime();
+        if (tempBaseTime > 0) {
+            actualBaseTime = tempBaseTime;
+        }
+
+        long elapsedTime = currTime - actualBaseTime;
         if (elapsedTime >= duration.value) {
             return displayer.getWidth();
         }
@@ -66,28 +52,13 @@ public class L2RDanmaku extends R2LDanmaku {
     }
 
     @Override
-    public float getLeft() {
-        return x;
-    }
-
-    @Override
-    public float getTop() {
-        return y;
-    }
-
-    @Override
-    public float getRight() {
-        return x + paintWidth;
-    }
-
-    @Override
-    public float getBottom() {
-        return y + paintHeight;
-    }
-
-    @Override
     public int getType() {
         return TYPE_SCROLL_LR;
     }
 
+    @Override
+    public void measure(IDisplayer displayer, boolean fromWorkerThread) {
+        super.measure(displayer, fromWorkerThread);
+        x = -paintWidth;
+    }
 }

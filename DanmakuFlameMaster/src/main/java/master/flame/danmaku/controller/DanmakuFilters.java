@@ -187,7 +187,7 @@ public class DanmakuFilters {
                 return false;
             }
 
-            long elapsedTime = SystemClock.uptimeMillis() - timer.currMillisecond;
+            long elapsedTime = SystemClock.uptimeMillis() - timer.getCurrMillisecond();
             if (elapsedTime >= mMaxTime) {
                 return true;
             }
@@ -374,7 +374,7 @@ public class DanmakuFilters {
         protected final LinkedHashMap<String, BaseDanmaku> currentDanmakus = new LinkedHashMap<String, BaseDanmaku>();
         private final IDanmakus passedDanmakus = new Danmakus(Danmakus.ST_BY_LIST);
 
-        private final void removeTimeoutDanmakus(final IDanmakus danmakus, final long limitTime) {
+        private void removeTimeoutDanmakus(final IDanmakus danmakus, final long limitTime) {
             danmakus.forEachSync(new IDanmakus.DefaultConsumer<BaseDanmaku>() {
                 long startTime = SystemClock.uptimeMillis();
                 @Override

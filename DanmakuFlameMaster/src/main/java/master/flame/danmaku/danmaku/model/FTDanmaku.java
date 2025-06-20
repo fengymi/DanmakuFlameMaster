@@ -40,7 +40,7 @@ public class FTDanmaku extends BaseDanmaku {
     @Override
     public void layout(IDisplayer displayer, float x, float y) {
         if (mTimer != null) {
-            long deltaDuration = mTimer.currMillisecond - getActualTime();
+            long deltaDuration = mTimer.getCurrMillisecond() - getActualTime();
             if (deltaDuration > 0 && deltaDuration < duration.value) {
                 if (!this.isShown()) {
                     this.x = getLeft(displayer);
@@ -69,7 +69,7 @@ public class FTDanmaku extends BaseDanmaku {
     }
 
     @Override
-    public float[] getRectAtTime(IDisplayer displayer, long time) {
+    public float[] getRectAtTime(IDisplayer displayer, long time, long tempBaseTime) {
         if (!isMeasured())
             return null;
         float left = getLeft(displayer);

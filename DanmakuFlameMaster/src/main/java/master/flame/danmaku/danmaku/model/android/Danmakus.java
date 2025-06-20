@@ -24,16 +24,23 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import master.flame.danmaku.danmaku.model.BaseDanmaku;
 import master.flame.danmaku.danmaku.model.Danmaku;
 import master.flame.danmaku.danmaku.model.IDanmakus;
+import master.flame.danmaku.danmaku.util.function.Supplier;
 
 public class Danmakus implements IDanmakus {
     public static final String TAG = "Danmakus";
 
-    public Collection<BaseDanmaku> items;
+    private ReadWriteLock itemsLock;
+    private Collection<BaseDanmaku> items;
 
     private Danmakus subItems;
 
@@ -43,14 +50,11 @@ public class Danmakus implements IDanmakus {
 
     private BaseDanmaku startSubItem;
 
-    private volatile AtomicInteger mSize = new AtomicInteger(0);
-
     private int mSortType = ST_BY_TIME;
 
     private BaseComparator mComparator;
 
     private boolean mDuplicateMergingEnabled;
-    private Object mLockObject = new Object();
 
     public Danmakus() {
         this(ST_BY_TIME, false);
@@ -65,6 +69,10 @@ public class Danmakus implements IDanmakus {
     }
 
     public Danmakus(int sortType, boolean duplicateMergingEnabled, BaseComparator baseComparator) {
+        this(sortType, duplicateMergingEnabled, baseComparator, true);
+    }
+
+    public Danmakus(int sortType, boolean duplicateMergingEnabled, BaseComparator baseComparator, boolean needLock) {
         BaseComparator comparator = null;
         if (sortType == ST_BY_TIME) {
             comparator = baseComparator == null ? new TimeComparator(duplicateMergingEnabled) : baseComparator;
@@ -73,6 +81,10 @@ public class Danmakus implements IDanmakus {
         } else if (sortType == ST_BY_YPOS_DESC) {
             comparator = new YPosDescComparator(duplicateMergingEnabled);
         }
+        if (comparator == null) {
+            comparator = new TimeComparator(duplicateMergingEnabled);
+        }
+
         if (sortType == ST_BY_LIST) {
             items = new LinkedList<>();
         } else {
@@ -81,8 +93,16 @@ public class Danmakus implements IDanmakus {
             items = new TreeSet<>(comparator);
             mComparator = comparator;
         }
+
+        if (needLock) {
+            itemsLock = new ReentrantReadWriteLock();
+        }
+
         mSortType = sortType;
-        mSize.set(0);
+    }
+
+    public void setItemsLock(ReadWriteLock itemsLock) {
+        this.itemsLock = itemsLock;
     }
 
     public Danmakus(Collection<BaseDanmaku> items) {
@@ -94,36 +114,45 @@ public class Danmakus implements IDanmakus {
     }
 
     public void setItems(Collection<BaseDanmaku> items) {
-        if (mDuplicateMergingEnabled && mSortType != ST_BY_LIST) {
-            synchronized (this.mLockObject) {
+        writeLock(() -> {
+            if (mDuplicateMergingEnabled && mSortType != ST_BY_LIST) {
                 this.items.clear();
                 this.items.addAll(items);
-                items = this.items;
+            } else {
+                this.items = items;
             }
-        } else {
-            this.items = items;
-        }
-        if (items instanceof List) {
-            mSortType = ST_BY_LIST;
-        }
-        mSize.set(items == null ? 0 : items.size());
+            if (items instanceof List) {
+                mSortType = ST_BY_LIST;
+            }
+        });
     }
 
     @Override
     public boolean addItem(BaseDanmaku item) {
-        synchronized (this.mLockObject) {
+        return writeLock(() -> {
             if (items != null) {
                 try {
-                    if (items.add(item)) {
-                        mSize.incrementAndGet();
-                        return true;
-                    }
+                    return items.add(item);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-        }
-        return false;
+            return false;
+        });
+    }
+
+    @Override
+    public boolean addAllItem(Collection<BaseDanmaku> items) {
+        return writeLock(() -> {
+            if (items != null) {
+                try {
+                    return this.items.addAll(items);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            return false;
+        });
     }
 
     @Override
@@ -134,22 +163,16 @@ public class Danmakus implements IDanmakus {
         if (item.isOutside()) {
             item.setVisibility(false);
         }
-        synchronized (this.mLockObject) {
-            if (items.remove(item)) {
-                mSize.decrementAndGet();
-                return true;
-            }
-        }
-        return false;
+
+        return writeLock(()-> items.remove(item));
     }
 
     private Collection<BaseDanmaku> subset(long startTime, long endTime) {
-        if (mSortType == ST_BY_LIST || items == null || items.size() == 0) {
+        if (mSortType == ST_BY_LIST || items == null || items.isEmpty()) {
             return null;
         }
         if (subItems == null) {
             subItems = new Danmakus(mDuplicateMergingEnabled);
-            subItems.mLockObject = this.mLockObject;
         }
         if (startSubItem == null) {
             startSubItem = createItem("start");
@@ -160,7 +183,7 @@ public class Danmakus implements IDanmakus {
 
         startSubItem.setTime(startTime);
         endSubItem.setTime(endTime);
-        return ((SortedSet<BaseDanmaku>) items).subSet(startSubItem, endSubItem);
+        return readLock(()-> ((SortedSet<BaseDanmaku>) items).subSet(startSubItem, endSubItem));
     }
 
     @Override
@@ -169,25 +192,21 @@ public class Danmakus implements IDanmakus {
         if (subset == null || subset.isEmpty()) {
             return null;
         }
-        LinkedList<BaseDanmaku> newSet = new LinkedList<BaseDanmaku>(subset);
+        LinkedList<BaseDanmaku> newSet = new LinkedList<>(subset);
         return new Danmakus(newSet);
     }
 
     @Override
     public IDanmakus sub(long startTime, long endTime) {
-        if (items == null || items.size() == 0) {
+        if (items == null || items.isEmpty()) {
             return null;
         }
         if (subItems == null) {
             if(mSortType == ST_BY_LIST) {
                 subItems = new Danmakus(Danmakus.ST_BY_LIST);
-                subItems.mLockObject = this.mLockObject;
-                synchronized (this.mLockObject) {
-                    subItems.setItems(items);
-                }
+                subItems.setItems(items);
             } else {
                 subItems = new Danmakus(mDuplicateMergingEnabled);
-                subItems.mLockObject = this.mLockObject;
             }
         }
         if (mSortType == ST_BY_LIST) {
@@ -200,18 +219,10 @@ public class Danmakus implements IDanmakus {
             endItem = createItem("end");
         }
 
-        if (subItems != null) {
-            long dtime = startTime - startItem.getActualTime();
-            if (dtime >= 0 && endTime <= endItem.getActualTime()) {
-                return subItems;
-            }
-        }
-
         startItem.setTime(startTime);
         endItem.setTime(endTime);
-        synchronized (this.mLockObject) {
-            subItems.setItems(((SortedSet<BaseDanmaku>) items).subSet(startItem, endItem));
-        }
+        SortedSet<BaseDanmaku> subNewItems = readLock(() -> ((SortedSet<BaseDanmaku>) items).subSet(startItem, endItem));
+        subItems.setItems(subNewItems);
         return subItems;
     }
 
@@ -220,44 +231,46 @@ public class Danmakus implements IDanmakus {
     }
 
     public int size() {
-        return mSize.get();
+        return items.size();
     }
 
     @Override
     public void clear() {
-        synchronized (this.mLockObject) {
+        writeLock(() -> {
             if (items != null) {
                 items.clear();
-                mSize.set(0);
             }
-        }
-        if (subItems != null) {
-            subItems = null;
-            startItem = createItem("start");
-            endItem = createItem("end");
-        }
+
+            if (subItems != null) {
+                subItems = null;
+                startItem = createItem("start");
+                endItem = createItem("end");
+            }
+        });
     }
 
     @Override
     public BaseDanmaku first() {
-        if (items != null && !items.isEmpty()) {
-            if (mSortType == ST_BY_LIST) {
-                return ((LinkedList<BaseDanmaku>) items).peek();
-            }
-            return ((SortedSet<BaseDanmaku>) items).first();
+        if (items == null || items.isEmpty()) {
+            return null;
         }
-        return null;
+
+        if (mSortType == ST_BY_LIST) {
+            return ((LinkedList<BaseDanmaku>) items).peek();
+        }
+        return readLock(() -> ((SortedSet<BaseDanmaku>) items).first());
     }
 
     @Override
     public BaseDanmaku last() {
-        if (items != null && !items.isEmpty()) {
-            if (mSortType == ST_BY_LIST) {
-                return ((LinkedList<BaseDanmaku>) items).peekLast();
-            }
-            return ((SortedSet<BaseDanmaku>) items).last();
+        if (items == null || items.isEmpty()) {
+            return null;
         }
-        return null;
+
+        if (mSortType == ST_BY_LIST) {
+            return ((LinkedList<BaseDanmaku>) items).peekLast();
+        }
+        return readLock(() -> ((SortedSet<BaseDanmaku>) items).last());
     }
 
     @Override
@@ -281,7 +294,6 @@ public class Danmakus implements IDanmakus {
         startItem = endItem = null;
         if (subItems == null) {
             subItems = new Danmakus(enable);
-            subItems.mLockObject = this.mLockObject;
         }
         subItems.setDuplicateMergingEnabled(enable);
     }
@@ -293,8 +305,10 @@ public class Danmakus implements IDanmakus {
 
     @Override
     public void forEachSync(Consumer<? super BaseDanmaku, ?> consumer) {
-        synchronized (this.mLockObject) {
+        if (items instanceof ConcurrentSkipListSet) {
             forEach(consumer);
+        } else {
+            readLock(() -> forEach(consumer));
         }
     }
 
@@ -302,33 +316,59 @@ public class Danmakus implements IDanmakus {
     public void forEach(Consumer<? super BaseDanmaku, ?> consumer) {
         consumer.before();
         Iterator<BaseDanmaku> it = items.iterator();
-        try {
-            while (it.hasNext()) {
-                BaseDanmaku next = it.next();
-                if (next == null) {
-                    continue;
-                }
-                int action = consumer.accept(next);
-                if (action == DefaultConsumer.ACTION_BREAK) {
-                    break;
-                } else if (action == DefaultConsumer.ACTION_REMOVE) {
-                    it.remove();
-                    mSize.decrementAndGet();
-                } else if (action == DefaultConsumer.ACTION_REMOVE_AND_BREAK) {
-                    it.remove();
-                    mSize.decrementAndGet();
-                    break;
-                }
+
+        while (it.hasNext()) {
+            BaseDanmaku next = it.next();
+            if (next == null) {
+                continue;
             }
-        } catch (Exception e) {
-            Log.e(TAG,"danmu forEach error:" + e.getMessage(), e);
+            int action = consumer.accept(next);
+            if (action == DefaultConsumer.ACTION_BREAK) {
+                break;
+            } else if (action == DefaultConsumer.ACTION_REMOVE) {
+                it.remove();
+            } else if (action == DefaultConsumer.ACTION_REMOVE_AND_BREAK) {
+                it.remove();
+                break;
+            }
         }
+
         consumer.after();
     }
 
-    @Override
-    public Object obtainSynchronizer() {
-        return mLockObject;
+    protected void readLock(Runnable runnable) {
+        Lock lock = getReadLock();
+        lockRun(lock, runnable);
     }
 
+    protected <T> T readLock(Supplier<T> supplier) {
+        Lock lock = getReadLock();
+        return lockRun(lock, supplier);
+    }
+
+    protected void writeLock(Runnable runnable) {
+        Lock lock = getWriteLock();
+        lockRun(lock, runnable);
+    }
+
+    protected <T> T writeLock(Supplier<T> supplier) {
+        Lock lock = getWriteLock();
+        return lockRun(lock, supplier);
+    }
+
+    protected Lock getReadLock() {
+        if (itemsLock == null) {
+            return null;
+        }
+
+        return itemsLock.readLock();
+    }
+
+    protected Lock getWriteLock() {
+        if (itemsLock == null) {
+            return null;
+        }
+
+        return itemsLock.writeLock();
+    }
 }

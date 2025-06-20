@@ -89,10 +89,7 @@ public class FakeDanmakuView extends DanmakuView implements DrawHandler.Callback
                         item.mFilterParam = danmaku.mFilterParam;
                         item.filterResetFlag = danmaku.filterResetFlag;
                         item.flags = mContext.mGlobalFlagValues;
-                        Object lock = danmakus.obtainSynchronizer();
-                        synchronized (lock) {
-                            danmakus.addItem(item);
-                        }
+                        danmakus.addItem(item);
                     }
                     return 0;
                 }
@@ -191,7 +188,7 @@ public class FakeDanmakuView extends DanmakuView implements DrawHandler.Callback
         }
         OnFrameAvailableListener onFrameAvailableListener = this.mOnFrameAvailableListener;
         if (onFrameAvailableListener != null) {
-            long curr = mOuterTimer.currMillisecond;
+            long curr = mOuterTimer.getCurrMillisecond();
             try {
                 if (curr >= mExpectBeginMills - mFrameIntervalMills) {
                     Bitmap bitmap;
@@ -328,7 +325,7 @@ public class FakeDanmakuView extends DanmakuView implements DrawHandler.Callback
     @Override
     public void updateTimer(DanmakuTimer timer) {
         mTimer = timer;
-        timer.update(mOuterTimer.currMillisecond);
+        timer.update(mOuterTimer.getCurrMillisecond());
         mOuterTimer.add(mFrameIntervalMills);
         timer.add(mFrameIntervalMills);
     }

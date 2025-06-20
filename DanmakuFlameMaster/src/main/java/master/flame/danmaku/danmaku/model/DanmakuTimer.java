@@ -2,6 +2,8 @@ package master.flame.danmaku.danmaku.model;
 
 import android.annotation.SuppressLint;
 
+import master.flame.danmaku.danmaku.util.DanmuSystemTimer;
+
 /**
  * 重写DanmakuTimer类，基于播放器的绝对时间戳进行同步
  */
@@ -10,14 +12,16 @@ public class DanmakuTimer {
      * 视频播放器的当前时间戳（毫秒）
      * 由VideoManager直接更新
      */
-    public static long videoTime;
+    public static volatile long videoTime;
     
     /**
      * 是否使用播放器的原始时间
      * true: 使用videoTime作为时间源
      * false: 使用内部计时
      */
-    public static boolean useOrigin = false;
+    public static boolean useVideoTime = true;
+
+    private boolean selfUseSystemTime;
     
     /**
      * 调试模式
@@ -27,7 +31,15 @@ public class DanmakuTimer {
     /**
      * 当前弹幕系统的内部时间（毫秒）
      */
-    public long currMillisecond;
+    private long currMillisecond;
+
+    /**
+     * 获取当前时间
+     * @return 当前时间
+     */
+    public long getCurrMillisecond() {
+        return useVideoTime ? videoTime : currMillisecond;
+    }
 
     /**
      * 上次更新的时间间隔
@@ -35,9 +47,15 @@ public class DanmakuTimer {
     private long lastInterval;
 
     public DanmakuTimer() {
+        this(false);
+    }
+
+    public DanmakuTimer(boolean selfUseSystemTime) {
+        this.selfUseSystemTime = selfUseSystemTime;
     }
 
     public DanmakuTimer(long curr) {
+        this(false);
         update(curr);
     }
 
@@ -48,7 +66,7 @@ public class DanmakuTimer {
      */
     public long update(long curr) {
         // 如果启用了播放器时间同步，则始终使用videoTime
-        if (useOrigin) {
+        if (useVideoTime && !selfUseSystemTime) {
             long realTime = videoTime;
             lastInterval = realTime - currMillisecond;
             currMillisecond = realTime;
@@ -66,10 +84,10 @@ public class DanmakuTimer {
      */
     public long add(long mills) {
         // 如果启用了播放器时间同步，直接返回videoTime
-        if (useOrigin) {
+        if (useVideoTime) {
             return update(videoTime);
         }
-        return update(currMillisecond + mills);
+        return update((long) (currMillisecond + mills * DanmuSystemTimer.getSpeed()));
     }
 
     /**
@@ -88,6 +106,7 @@ public class DanmakuTimer {
     @SuppressLint("DefaultLocale")
     public static String formatTime(long time) {
         long allSecond = time / 1000;
+        long allMiSecond = time % 1000;
 
         long second = allSecond % 60;
         long minute = allSecond / 60;
