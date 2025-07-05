@@ -554,16 +554,15 @@ public class DrawHandler extends Handler {
         if (quitFlag) {
             return;
         }
+        Choreographer.getInstance().postFrameCallback(mFrameCallback);
         long startMS = SystemClock.uptimeMillis();
         long d = syncTimer(startMS);
         if (d < 0) {
-            removeMessages(UPDATE);
-            Choreographer.getInstance().postFrameCallback(mFrameCallback);
+//            removeMessages(UPDATE);
             return;
         }
-        removeMessages(UPDATE);
         d = mDanmakuView.drawDanmakus();
-        Choreographer.getInstance().postFrameCallback(mFrameCallback);
+        removeMessages(UPDATE);
         if (d > mCordonTime2) {  // this situation may be cuased by ui-thread waiting of DanmakuView, so we sync-timer at once
             timer.add(d);
             mDrawTimes.clear();
