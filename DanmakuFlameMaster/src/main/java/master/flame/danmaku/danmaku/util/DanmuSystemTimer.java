@@ -71,8 +71,8 @@ public class DanmuSystemTimer {
      * @param time 弹幕系统绝对时间
      */
     public synchronized static void changeStatus(int newStatus, long time) {
-        String originDanmuRealBaseTimeStr = DanmakuTimer.formatTime(danmuRealBaseTime);
-        long originDanmuBaseTime = danmuBaseTime;
+//        String originDanmuRealBaseTimeStr = DanmakuTimer.formatTime(danmuRealBaseTime);
+//        long originDanmuBaseTime = danmuBaseTime;
 
         switch (newStatus) {
             case DrawHandler.PAUSE:
