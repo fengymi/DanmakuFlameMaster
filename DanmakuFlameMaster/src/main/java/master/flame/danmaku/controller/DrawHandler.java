@@ -28,6 +28,7 @@ import android.util.Log;
 import android.view.Choreographer;
 
 import java.util.LinkedList;
+import java.util.Objects;
 
 import master.flame.danmaku.danmaku.model.AbsDanmakuSync;
 import master.flame.danmaku.danmaku.model.AbsDisplayer;
@@ -555,13 +556,14 @@ public class DrawHandler extends Handler {
             return;
         }
         Choreographer.getInstance().postFrameCallback(mFrameCallback);
-        long startMS = SystemClock.uptimeMillis();
-        long d = syncTimer(startMS);
-        if (d < 0) {
-//            removeMessages(UPDATE);
-            return;
-        }
-        d = mDanmakuView.drawDanmakus();
+//        long startMS = SystemClock.uptimeMillis();
+//        long d = syncTimer(startMS);
+//        if (d < 0) {
+////            removeMessages(UPDATE);
+//            Log.d("updateInChoreographer", "d=" + d);
+//            return;
+//        }
+        long d = mDanmakuView.drawDanmakus();
         removeMessages(UPDATE);
         if (d > mCordonTime2) {  // this situation may be cuased by ui-thread waiting of DanmakuView, so we sync-timer at once
             timer.add(d);

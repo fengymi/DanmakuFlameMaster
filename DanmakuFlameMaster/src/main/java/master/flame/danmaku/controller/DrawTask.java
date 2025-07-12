@@ -81,6 +81,7 @@ public class DrawTask implements IDrawTask {
     private final AtomicBoolean bufferCalculatorRunning;
     private static final long BUFFER_CALCULATOR_TIME_GAP = 300L;
     private final Runnable bufferCalculator;
+    private boolean resetCalculator;
     private final AtomicBoolean drawing;
 
     private ConfigChangedCallback mConfigChangedCallback = new ConfigChangedCallback() {
@@ -309,6 +310,10 @@ public class DrawTask implements IDrawTask {
         mStartRenderTime = mills < 1000 ? 0 : mills;
         mRenderingState.reset();
         mRenderingState.endTime = mStartRenderTime;
+
+        // 直接更新一次
+        DanmakuTimer.videoTime = mStartRenderTime;
+        resetCalculator = true;
     }
 
     @Override
@@ -376,7 +381,7 @@ public class DrawTask implements IDrawTask {
      * @param currentTime 当前时间
      */
     protected void autoCalcNeedShowDanmakus(long currentTime) {
-        long startTime = System.currentTimeMillis();
+//        long startTime = System.currentTimeMillis();
         // prepare screenDanmakus
         long beginMills = currentTime - mContext.mDanmakuFactory.MAX_DANMAKU_DURATION - 100;
         long endMills = currentTime + mContext.mDanmakuFactory.MAX_DANMAKU_DURATION;
@@ -385,9 +390,11 @@ public class DrawTask implements IDrawTask {
         int currentShowIndex = this.showIndex.get();
         IDanmakus currentShowDanmakus = danmakusContainer[currentShowIndex % danmakusContainer.length];
         // 只捞取当前最后一个弹幕之后的时间
-        BaseDanmaku last = currentShowDanmakus.last();
-        if (last != null) {
-            beginMills = Math.max(beginMills, last.getActualTime() + 1);
+        if (!resetCalculator) {
+            BaseDanmaku last = currentShowDanmakus.last();
+            if (last != null) {
+                beginMills = Math.max(beginMills, last.getActualTime() + 1);
+            }
         }
 
         if (beginMills > endMills) {
@@ -411,12 +418,16 @@ public class DrawTask implements IDrawTask {
 
         /*
          * 1. 清空原容器
-         * 2. 添加上次展示的弹幕
+         * 2. 添加上次展示的弹幕 // 如果不需要重置数据的话就添加之前显示过的，否则不添加历史数据
          * 3. 删除过期的数据
          * 4. 加入本次新增的数据
          */
         nextNeedShowDanmakus.clear();
-        nextNeedShowDanmakus.addAllItem(currentShowDanmakus.getCollection());
+        if (resetCalculator) {
+            resetCalculator = false;
+        } else {
+            nextNeedShowDanmakus.addAllItem(currentShowDanmakus.getCollection());
+        }
         nextNeedShowDanmakus.forEach(timeOutRemover);
         nextNeedShowDanmakus.addAllItem(newNeedAddItems.getCollection());
 
